@@ -1,0 +1,26 @@
+#!/system/bin/sh
+# main runner (process manager) for barnacle, root required
+
+cd ${brncl_path:-.}
+
+# load the driver
+# NOTE: Android's shell is ash and there is no "test" or "["
+: ${brncl_lan_script:=wifi}
+chmod 750 ./$brncl_lan_script
+./$brncl_lan_script load
+
+# necessary hack for HTC phones
+type ip >/dev/null 2>&1 && ip route del table gprs default >/dev/null 2>&1
+
+# ifconfig $brncl_if_lan $brncl_lan_gw netmask $brncl_lan_netmask up
+./wifi config
+
+./dhcp &
+./nat &
+
+# the association loop
+./wifi assoc
+
+# cleanup
+./wifi unload
+
